@@ -1,2 +1,2 @@
-# bsg
+# BSG
 Bob Semple Game-engine
