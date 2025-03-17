@@ -23,7 +23,7 @@ fn main() {
     ecs.add_velocity(e1, 1.0, 0.5);
 
     ecs.add_position(e2, 5.0, 5.0);
-    ecs.add_velocity(e2, -0.5, -1.0);
+    ecs.add_velocity(e2, 0.5, 1.0);
 
     let mut texture_handler = TextureHandler::new();
     texture_handler.load_texture(&mut rl, &thread, TexHandle::SPAM, "resources/Spam.png");
