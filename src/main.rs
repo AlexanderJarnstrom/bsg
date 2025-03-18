@@ -41,6 +41,6 @@ fn main() {
         movement_system(&mut ecs);
 
         /* RENDERING */
-render_system(&ecs, &mut rl, &thread, &texture_handler);
+        render_system(&ecs, &mut rl, &thread, &texture_handler);
     }
 }

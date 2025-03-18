@@ -158,14 +158,13 @@ pub fn render_system(
 
         if let Some(pos) = ecs.get_position(entity) {
             if let Some(sprite) = ecs.get_sprite(entity) {
-                if let Some(tex) = texture_handler.get(sprite.tex_id.clone()){
+                if let Some(tex) = texture_handler.get(sprite.tex_id.clone()) {
                     d.draw_texture(&tex, pos.x as i32, pos.y as i32, Color::WHITE);
                 }
             }
         }
     }
 }
-
 
 #[derive(Eq, Hash, PartialEq, Clone)]
 pub enum TexHandle {
