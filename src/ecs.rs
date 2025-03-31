@@ -2,7 +2,9 @@
 use raylib::prelude::*;
 use std::collections::HashMap;
 
-type Entity = u32;
+pub mod player;
+
+pub type Entity = u32;
 
 pub struct ECS {
     next_id: Entity,
@@ -34,6 +36,7 @@ impl ECS {
     pub fn add_velocity(&mut self, id: Entity, dx: f32, dy: f32) {
         self.velocity_pool.add(id, Velocity { dx, dy });
     }
+
     pub fn add_sprite(&mut self, id: Entity, tex_id: TexHandle) {
         self.sprite_pool.add(id, Sprite { tex_id });
     }
@@ -164,6 +167,8 @@ pub fn render_system(
             }
         }
     }
+
+    d.draw_text("hej", 10, 10, 20, Color::WHITE);
 }
 
 #[derive(Eq, Hash, PartialEq, Clone)]
