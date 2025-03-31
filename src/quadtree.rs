@@ -1,13 +1,14 @@
 use raylib::{color::Color, ffi::Rectangle, prelude::{RaylibDraw, RaylibDrawHandle}};
 
+static MAX_LEVEL: usize = 20;
+
+struct Children (Quadtree, Quadtree, Quadtree, Quadtree);
+
 pub struct Quadtree {
     level: usize,
     bounds: Rectangle,
 
-    pub nw: Option<Box<Quadtree>>,
-    pub ne: Option<Box<Quadtree>>,
-    pub sw: Option<Box<Quadtree>>,
-    pub se: Option<Box<Quadtree>>,
+    children: Option<Box<Children>>,
 }
 
 impl Quadtree {
@@ -15,80 +16,59 @@ impl Quadtree {
         Quadtree {
             level: 0,
             bounds,
-            nw: None,
-            ne: None,
-            sw: None,
-            se: None,
+            children: None,
         } 
     } 
 
-    fn new_node(&self, bounds: Rectangle) -> Option<Box<Quadtree>> {
-        Some(Box::new(Quadtree::new(bounds).set_level(self.level + 1)))
-    }
-
-    fn set_level(self, level: usize) -> Self {
-        Quadtree { level, bounds: self.bounds, nw: self.nw, ne: self.ne, sw: self.sw, se: self.se }
-    }
-
     pub fn draw(&self, handle: &mut RaylibDrawHandle) {
-        let Some(nw) = &self.nw else {
-            eprint!("Node {} has un initialized child NW.", self.level);
+        let Some(children) = &self.children else {
             return;
         };
 
-        let Some(ne) = &self.ne else {
-            eprint!("Node {} has un initialized child NE.", self.level);
-            return;
-        };
+        handle.draw_rectangle_rec(children.0.bounds, Color::BLUE);
+        handle.draw_rectangle_rec(children.1.bounds, Color::RED);
+        handle.draw_rectangle_rec(children.2.bounds, Color::RED);
+        handle.draw_rectangle_rec(children.3.bounds, Color::BLUE);
 
-        let Some(sw) = &self.sw else {
-            eprint!("Node {} has un initialized child SW.", self.level);
-            return;
-        };
-
-        let Some(se) = &self.se else {
-            eprint!("Node {} has un initialized child SE.", self.level);
-            return;
-        };
-
-        handle.draw_rectangle_rec(nw.bounds, Color::BLUE);
-        handle.draw_rectangle_rec(ne.bounds, Color::RED);
-        handle.draw_rectangle_rec(sw.bounds, Color::RED);
-        handle.draw_rectangle_rec(se.bounds, Color::BLUE);
+        children.0.draw(handle);
+        children.1.draw(handle);
+        children.2.draw(handle);
+        children.3.draw(handle);
     }
 
     pub fn split(&mut self) {
+        let x = self.bounds.x;
+        let y = self.bounds.y;
         let width = self.bounds.width / 2.0;
         let height = self.bounds.height / 2.0;
         let x_off = self.bounds.x + width;
         let y_off = self.bounds.y + height;
 
-        self.nw = self.new_node(Rectangle {
-            x: self.bounds.x,
-            y: self.bounds.y,
-            width,
-            height,
-        });
+        self.children = Some(Box::new(Children(
+            Quadtree::new(Rectangle { x, y, width, height }).set_level(self.level + 1),
+            Quadtree::new(Rectangle { x: x_off, y, width, height }).set_level(self.level + 1),
+            Quadtree::new(Rectangle { x, y: y_off, width, height }).set_level(self.level + 1),
+            Quadtree::new(Rectangle { x: x_off, y: y_off, width, height }).set_level(self.level + 1),
+        )));
+    }
 
-        self.ne = self.new_node(Rectangle {
-            x: x_off,
-            y: self.bounds.y,
-            width,
-            height,
-        });
+    fn set_level(mut self, level: usize) -> Self {
+        self.level = level;
+        self
+    }
 
-        self.sw = self.new_node(Rectangle {
-            x: self.bounds.x,
-            y: y_off,
-            width,
-            height,
-        });
+    pub fn test(&mut self, level: usize) {
+        if level == MAX_LEVEL {
+            return;
+        }
 
-        self.se = self.new_node(Rectangle {
-            x: x_off,
-            y: y_off,
-            width,
-            height,
-        });
+        self.split();
+
+        let Some(children) = &mut self.children else {
+            return;
+        };
+
+        children.0.test(level + 1);
     }
 }
+

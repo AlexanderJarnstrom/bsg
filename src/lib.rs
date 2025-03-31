@@ -38,7 +38,7 @@ pub fn run() {
     rl.set_target_fps(60);
 
     let mut tree = Quadtree::new(raylib::ffi::Rectangle { x: 0.0, y: 0.0, width: SCREEN_WIDTH.as_f32(), height: SCREEN_HEIGHT.as_f32() });
-    tree.split();
+    tree.test(0);
 
     while !rl.window_should_close() {
         /* INPUT */
