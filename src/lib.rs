@@ -1,7 +1,9 @@
 use ecs::{ECS, TexHandle, TextureHandler, player::Player};
-use raylib::ffi::TraceLogLevel::LOG_NONE;
+use quadtree::Quadtree;
+use raylib::{ffi::TraceLogLevel::LOG_NONE, misc::AsF32};
 
-pub mod ecs;
+mod ecs;
+mod quadtree;
 
 const SCREEN_WIDTH: i32 = 1280;
 const SCREEN_HEIGHT: i32 = 720;
@@ -35,6 +37,9 @@ pub fn run() {
 
     rl.set_target_fps(60);
 
+    let mut tree = Quadtree::new(raylib::ffi::Rectangle { x: 0.0, y: 0.0, width: SCREEN_WIDTH.as_f32(), height: SCREEN_HEIGHT.as_f32() });
+    tree.split();
+
     while !rl.window_should_close() {
         /* INPUT */
         p.input(&mut ecs, &mut rl);
@@ -43,6 +48,6 @@ pub fn run() {
         ecs::movement_system(&mut ecs);
 
         /* RENDERING */
-        ecs::render_system(&ecs, &mut rl, &thread, &texture_handler);
+        ecs::render_system(&ecs, &mut rl, &thread, &texture_handler, &tree);
     }
 }

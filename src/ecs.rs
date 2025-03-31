@@ -2,6 +2,8 @@
 use raylib::prelude::*;
 use std::collections::HashMap;
 
+use crate::quadtree::Quadtree;
+
 pub mod player;
 
 pub type Entity = u32;
@@ -152,9 +154,12 @@ pub fn render_system(
     rl: &mut RaylibHandle,
     thread: &RaylibThread,
     texture_handler: &TextureHandler,
+    tree: &Quadtree,
 ) {
     let mut d = rl.begin_drawing(thread);
     d.clear_background(Color::BLACK);
+
+    tree.draw(&mut d);
 
     for i in 0..ecs.sprite_pool.components.len() {
         let entity = ecs.sprite_pool.entities[i];
