@@ -1,4 +1,8 @@
+use std::clone;
+
 use raylib::{color::Color, ffi::Rectangle, prelude::{RaylibDraw, RaylibDrawHandle}};
+
+use crate::ecs::{Entity, Position, ECS};
 
 static MAX_LEVEL: usize = 20;
 
@@ -9,6 +13,7 @@ pub struct Quadtree {
     bounds: Rectangle,
 
     children: Option<Box<Children>>,
+    entities: Vec<Entity>,
 }
 
 impl Quadtree {
@@ -17,6 +22,7 @@ impl Quadtree {
             level: 0,
             bounds,
             children: None,
+            entities: Vec::new(),
         } 
     } 
 
@@ -25,10 +31,10 @@ impl Quadtree {
             return;
         };
 
-        handle.draw_rectangle_rec(children.0.bounds, Color::BLUE);
-        handle.draw_rectangle_rec(children.1.bounds, Color::RED);
-        handle.draw_rectangle_rec(children.2.bounds, Color::RED);
-        handle.draw_rectangle_rec(children.3.bounds, Color::BLUE);
+        handle.draw_rectangle_lines_ex(children.0.bounds, 0.5, Color::WHITE);
+        handle.draw_rectangle_lines_ex(children.1.bounds, 0.5, Color::WHITE);
+        handle.draw_rectangle_lines_ex(children.2.bounds, 0.5, Color::WHITE);
+        handle.draw_rectangle_lines_ex(children.3.bounds, 0.5, Color::WHITE);
 
         children.0.draw(handle);
         children.1.draw(handle);
@@ -57,18 +63,78 @@ impl Quadtree {
         self
     }
 
-    pub fn test(&mut self, level: usize) {
-        if level == MAX_LEVEL {
-            return;
-        }
-
-        self.split();
-
-        let Some(children) = &mut self.children else {
+    pub fn add_entity(&mut self, ecs: &ECS, entity: &Entity) {
+        let Some(entity_bounds) = ecs.get_position(entity.clone()) else {
             return;
         };
 
-        children.0.test(level + 1);
+        if let Some(children) = &mut self.children {
+
+            if children.0.is_overlapping(&entity_bounds) {
+                children.0.add_entity(&ecs, &entity);
+            }else if children.1.is_overlapping(&entity_bounds) {
+                children.1.add_entity(&ecs, &entity);
+            }else if children.2.is_overlapping(&entity_bounds) {
+                children.2.add_entity(&ecs, &entity);
+            }else if children.3.is_overlapping(&entity_bounds) {
+                children.3.add_entity(&ecs, &entity);
+            }
+        } else {
+            if self.entities.len() > 0 {
+                self.split();
+                self.add_entity(ecs, entity);
+                self.add_entity(ecs, &self.entities.first().unwrap().clone());
+
+                self.entities.clear();
+            } else {
+                self.entities.push(entity.clone());
+            }
+        }
+
+    }
+
+    fn get_all_entities(&self) -> Vec<Entity> {
+        let Some(children) = &self.children else {
+
+            if let Some(entity) = self.entities.first() {
+                return vec![entity.clone()];
+            }
+
+            return Vec::new();
+        };
+
+        let mut entities: Vec<Entity> = Vec::new();
+
+        entities.append(&mut children.0.get_all_entities());
+        entities.append(&mut children.1.get_all_entities());
+        entities.append(&mut children.2.get_all_entities());
+        entities.append(&mut children.3.get_all_entities());
+
+        return entities;
+    }
+
+    pub fn update(&mut self, ecs: &ECS) {
+        let entities = self.get_all_entities();
+
+        self.children = None;
+
+        for entity in entities {
+            self.add_entity(ecs, &entity);
+        }
+    }
+
+    fn is_overlapping(&self, entity_bounds: &Position) -> bool {
+        if entity_bounds.x < self.bounds.x {
+            return false;
+        } else if entity_bounds.x > self.bounds.x + self.bounds.width {
+            return false;
+        } else if entity_bounds.y < self.bounds.y {
+            return false;
+        } else if entity_bounds.y > self.bounds.y + self.bounds.height {
+            return false;
+        }
+
+        true
     }
 }
 

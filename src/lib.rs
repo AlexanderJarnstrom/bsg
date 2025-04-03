@@ -21,11 +21,11 @@ pub fn run() {
     let e1 = ecs.allocate_entity();
     let e2 = ecs.allocate_entity();
 
-    ecs.add_position(e1, 0.0, 0.0);
-    ecs.add_velocity(e1, 1.0, 0.5);
+    ecs.add_position(e1, 10.0, 20.0);
+    ecs.add_velocity(e1, 1.0, 1.0);
 
-    ecs.add_position(e2, 5.0, 5.0);
-    ecs.add_velocity(e2, 0.5, 1.0);
+    ecs.add_position(e2, 20.0, 20.0);
+    ecs.add_velocity(e2, 0.2, 0.8);
 
     let mut texture_handler = TextureHandler::new();
     texture_handler.load_texture(&mut rl, &thread, TexHandle::SPAM, "resources/Spam.png");
@@ -38,7 +38,9 @@ pub fn run() {
     rl.set_target_fps(60);
 
     let mut tree = Quadtree::new(raylib::ffi::Rectangle { x: 0.0, y: 0.0, width: SCREEN_WIDTH.as_f32(), height: SCREEN_HEIGHT.as_f32() });
-    tree.test(0);
+    tree.add_entity(&ecs, &e1);
+    tree.add_entity(&ecs, &e2);
+    tree.add_entity(&ecs, &p.get_id());
 
     while !rl.window_should_close() {
         /* INPUT */
@@ -46,6 +48,7 @@ pub fn run() {
 
         /* UPDATE */
         ecs::movement_system(&mut ecs);
+        tree.update(&ecs);
 
         /* RENDERING */
         ecs::render_system(&ecs, &mut rl, &thread, &texture_handler, &tree);
