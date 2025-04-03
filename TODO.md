@@ -8,3 +8,4 @@
 
 
 # Known bugs
+- Dies if two entities share the same position.

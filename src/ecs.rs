@@ -2,6 +2,8 @@
 use raylib::prelude::*;
 use std::collections::HashMap;
 
+use crate::quadtree::Quadtree;
+
 pub mod player;
 
 pub type Entity = u32;
@@ -41,9 +43,10 @@ impl ECS {
         self.sprite_pool.add(id, Sprite { tex_id });
     }
 
-    fn get_position(&self, id: Entity) -> Option<&Position> {
+    pub fn get_position(&self, id: Entity) -> Option<&Position> {
         self.position_pool.get(id)
     }
+
     fn get_position_mut(&mut self, id: Entity) -> Option<&mut Position> {
         self.position_pool.get_mut(id)
     }
@@ -60,9 +63,9 @@ impl ECS {
 }
 
 #[derive(Debug, Clone)]
-struct Position {
-    x: f32,
-    y: f32,
+pub struct Position {
+    pub x: f32,
+    pub y: f32,
 }
 
 #[derive(Debug, Clone)]
@@ -152,9 +155,12 @@ pub fn render_system(
     rl: &mut RaylibHandle,
     thread: &RaylibThread,
     texture_handler: &TextureHandler,
+    tree: &Quadtree,
 ) {
     let mut d = rl.begin_drawing(thread);
     d.clear_background(Color::BLACK);
+
+    tree.draw(&mut d);
 
     for i in 0..ecs.sprite_pool.components.len() {
         let entity = ecs.sprite_pool.entities[i];
@@ -167,8 +173,6 @@ pub fn render_system(
             }
         }
     }
-
-    d.draw_text("hej", 10, 10, 20, Color::WHITE);
 }
 
 #[derive(Eq, Hash, PartialEq, Clone)]
