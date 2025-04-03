@@ -1,12 +1,13 @@
-use std::clone;
-
-use raylib::{color::Color, ffi::Rectangle, prelude::{RaylibDraw, RaylibDrawHandle}};
-
-use crate::ecs::{Entity, Position, ECS};
+use crate::ecs::{ECS, Entity, Position};
+use raylib::{
+    color::Color,
+    ffi::Rectangle,
+    prelude::{RaylibDraw, RaylibDrawHandle},
+};
 
 static MAX_LEVEL: usize = 20;
 
-struct Children (Quadtree, Quadtree, Quadtree, Quadtree);
+struct Children(Quadtree, Quadtree, Quadtree, Quadtree);
 
 pub struct Quadtree {
     level: usize,
@@ -23,8 +24,8 @@ impl Quadtree {
             bounds,
             children: None,
             entities: Vec::new(),
-        } 
-    } 
+        }
+    }
 
     pub fn draw(&self, handle: &mut RaylibDrawHandle) {
         let Some(children) = &self.children else {
@@ -51,10 +52,34 @@ impl Quadtree {
         let y_off = self.bounds.y + height;
 
         self.children = Some(Box::new(Children(
-            Quadtree::new(Rectangle { x, y, width, height }).set_level(self.level + 1),
-            Quadtree::new(Rectangle { x: x_off, y, width, height }).set_level(self.level + 1),
-            Quadtree::new(Rectangle { x, y: y_off, width, height }).set_level(self.level + 1),
-            Quadtree::new(Rectangle { x: x_off, y: y_off, width, height }).set_level(self.level + 1),
+            Quadtree::new(Rectangle {
+                x,
+                y,
+                width,
+                height,
+            })
+            .set_level(self.level + 1),
+            Quadtree::new(Rectangle {
+                x: x_off,
+                y,
+                width,
+                height,
+            })
+            .set_level(self.level + 1),
+            Quadtree::new(Rectangle {
+                x,
+                y: y_off,
+                width,
+                height,
+            })
+            .set_level(self.level + 1),
+            Quadtree::new(Rectangle {
+                x: x_off,
+                y: y_off,
+                width,
+                height,
+            })
+            .set_level(self.level + 1),
         )));
     }
 
@@ -69,33 +94,34 @@ impl Quadtree {
         };
 
         if let Some(children) = &mut self.children {
-
             if children.0.is_overlapping(&entity_bounds) {
                 children.0.add_entity(&ecs, &entity);
-            }else if children.1.is_overlapping(&entity_bounds) {
+            } else if children.1.is_overlapping(&entity_bounds) {
                 children.1.add_entity(&ecs, &entity);
-            }else if children.2.is_overlapping(&entity_bounds) {
+            } else if children.2.is_overlapping(&entity_bounds) {
                 children.2.add_entity(&ecs, &entity);
-            }else if children.3.is_overlapping(&entity_bounds) {
+            } else if children.3.is_overlapping(&entity_bounds) {
                 children.3.add_entity(&ecs, &entity);
             }
         } else {
             if self.entities.len() > 0 {
-                self.split();
-                self.add_entity(ecs, entity);
-                self.add_entity(ecs, &self.entities.first().unwrap().clone());
+                if self.level < MAX_LEVEL {
+                    self.split();
+                    self.add_entity(ecs, entity);
+                    self.add_entity(ecs, &self.entities.first().unwrap().clone());
 
-                self.entities.clear();
+                    self.entities.clear();
+                } else {
+                    self.entities.push(entity.clone());
+                }
             } else {
                 self.entities.push(entity.clone());
             }
         }
-
     }
 
     fn get_all_entities(&self) -> Vec<Entity> {
         let Some(children) = &self.children else {
-
             if let Some(entity) = self.entities.first() {
                 return vec![entity.clone()];
             }
@@ -137,4 +163,3 @@ impl Quadtree {
         true
     }
 }
-

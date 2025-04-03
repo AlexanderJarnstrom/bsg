@@ -37,7 +37,12 @@ pub fn run() {
 
     rl.set_target_fps(60);
 
-    let mut tree = Quadtree::new(raylib::ffi::Rectangle { x: 0.0, y: 0.0, width: SCREEN_WIDTH.as_f32(), height: SCREEN_HEIGHT.as_f32() });
+    let mut tree = Quadtree::new(raylib::ffi::Rectangle {
+        x: 0.0,
+        y: 0.0,
+        width: SCREEN_WIDTH.as_f32(),
+        height: SCREEN_HEIGHT.as_f32(),
+    });
     tree.add_entity(&ecs, &e1);
     tree.add_entity(&ecs, &e2);
     tree.add_entity(&ecs, &p.get_id());
