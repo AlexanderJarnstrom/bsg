@@ -28,13 +28,11 @@ pub fn run() {
     ecs.add_position(e2, 20.0, 20.0);
     ecs.add_velocity(e2, 0.2, 0.8);
 
-    // Load texture once and wrap in Arc
     let spam_texture = Arc::new(
         rl.load_texture(&thread, "resources/Spam.png")
             .expect("Failed to load texture"),
     );
 
-    // Share the Arc<SpamTexture> with all entities that use it
     ecs.add_sprite(e1, Arc::clone(&spam_texture));
     ecs.add_sprite(e2, Arc::clone(&spam_texture));
 
