@@ -1,10 +1,6 @@
 name: Rust
 
-on:
-  merge_group:
-  pull_request:
-    branches:
-      - main
+on: [push]
       
 env:
   CARGO_TERM_COLOR: always
