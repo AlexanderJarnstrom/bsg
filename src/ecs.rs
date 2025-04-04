@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use raylib::prelude::*;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::quadtree::Quadtree;
 
@@ -39,8 +40,8 @@ impl ECS {
         self.velocity_pool.add(id, Velocity { dx, dy });
     }
 
-    pub fn add_sprite(&mut self, id: Entity, tex_id: TexHandle) {
-        self.sprite_pool.add(id, Sprite { tex_id });
+    pub fn add_sprite(&mut self, id: Entity, texture: Arc<Texture2D>) {
+        self.sprite_pool.add(id, Sprite { texture });
     }
 
     pub fn get_position(&self, id: Entity) -> Option<&Position> {
@@ -74,9 +75,8 @@ struct Velocity {
     dy: f32,
 }
 
-// I don't really understand lifetimes. Just trusting the compiler suggestions at this point
 struct Sprite {
-    tex_id: TexHandle,
+    texture: Arc<Texture2D>,
 }
 
 struct ComponentPool<T> {
@@ -110,7 +110,6 @@ impl<T> ComponentPool<T> {
             self.components.swap(index, last);
             self.entities.swap(index, last);
 
-            // Update index map
             let last_id = self.entities[index];
             self.index_map.insert(last_id, index);
             self.index_map.remove(&id);
@@ -121,23 +120,16 @@ impl<T> ComponentPool<T> {
     }
 
     fn get(&self, id: Entity) -> Option<&T> {
-        if let Some(idx) = self.index_map.get(&id) {
-            return Some(&self.components[*idx]);
-        } else {
-            return None;
-        }
+        self.index_map.get(&id).map(|&idx| &self.components[idx])
     }
 
     fn get_mut(&mut self, id: Entity) -> Option<&mut T> {
-        if let Some(idx) = self.index_map.get(&id) {
-            return Some(&mut self.components[*idx]);
-        } else {
-            return None;
-        }
+        self.index_map
+            .get(&id)
+            .map(|&idx| &mut self.components[idx])
     }
 }
 
-//NOTE: might not wanan redo the mistake of having systems live in the ECS module
 pub fn movement_system(ecs: &mut ECS) {
     for i in 0..ecs.velocity_pool.components.len() {
         let id = ecs.velocity_pool.entities[i];
@@ -150,13 +142,7 @@ pub fn movement_system(ecs: &mut ECS) {
     }
 }
 
-pub fn render_system(
-    ecs: &ECS,
-    rl: &mut RaylibHandle,
-    thread: &RaylibThread,
-    texture_handler: &TextureHandler,
-    tree: &Quadtree,
-) {
+pub fn render_system(ecs: &ECS, rl: &mut RaylibHandle, thread: &RaylibThread, tree: &Quadtree) {
     let mut d = rl.begin_drawing(thread);
     d.clear_background(Color::BLACK);
 
@@ -167,44 +153,8 @@ pub fn render_system(
 
         if let Some(pos) = ecs.get_position(entity) {
             if let Some(sprite) = ecs.get_sprite(entity) {
-                if let Some(tex) = texture_handler.get(sprite.tex_id.clone()) {
-                    d.draw_texture(&tex, pos.x as i32, pos.y as i32, Color::WHITE);
-                }
+                d.draw_texture(&*sprite.texture, pos.x as i32, pos.y as i32, Color::WHITE);
             }
         }
-    }
-}
-
-#[derive(Eq, Hash, PartialEq, Clone)]
-pub enum TexHandle {
-    SPAM,
-}
-
-pub struct TextureHandler {
-    textures: HashMap<TexHandle, Texture2D>,
-}
-
-impl TextureHandler {
-    pub fn new() -> Self {
-        TextureHandler {
-            textures: HashMap::new(),
-        }
-    }
-
-    pub fn load_texture(
-        &mut self,
-        rl: &mut RaylibHandle,
-        thread: &RaylibThread,
-        id: TexHandle,
-        path: &str,
-    ) {
-        let texture = rl
-            .load_texture(thread, path)
-            .expect("Failed to load texture");
-        self.textures.insert(id, texture);
-    }
-
-    fn get(&self, id: TexHandle) -> Option<&Texture2D> {
-        self.textures.get(&id)
     }
 }

@@ -189,9 +189,9 @@ dependencies = [
 
 [[package]]
 name = "raylib"
-version = "5.5.0"
+version = "5.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "592b25e626f1b9e3ae92d5343592a2836efa84c7f1710b6b3a16440df20215f3"
+checksum = "e5c54335590d1b6e6fbdbccee09dafdfd76a1111fc3c709eca949e71e81f7a8a"
 dependencies = [
  "cfg-if",
  "paste",
@@ -202,9 +202,9 @@ dependencies = [
 
 [[package]]
 name = "raylib-sys"
-version = "5.5.0"
+version = "5.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85111fe8e90405af58eb8063bd05d8fd77d512315f3d551d0abc92deb0419f20"
+checksum = "3ce5adc950b042db67f1f78f24f7e76563652ce24db032afe9ca9e534d8b7a13"
 dependencies = [
  "bindgen",
  "cc",
